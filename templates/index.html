@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GoodBite | Checkout & Payment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<nav class="topbar">
+    <a class="brand" href="{{ url_for('index') }}">goodbite<span>.</span></a>
+    <span class="step-label">CHECKOUT · PAYMENT</span>
+</nav>
+<main class="page">
+    <header class="hero">
+        <p class="eyebrow">ALMOST THERE</p>
+        <h1>Make it official.<br><em>Let's check out.</em></h1>
+        <p>Review your order amount, choose a discount and select how you'd like to pay.</p>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <section class="checkout-layout">
+        <form class="checkout-card" method="post" action="{{ url_for('checkout') }}">
+            <div class="card-heading"><span class="number">01</span><div><h2>Order details</h2><p>Enter the details for this checkout.</p></div></div>
+
+            <label for="customer_name">Customer name</label>
+            <input id="customer_name" name="customer_name" required maxlength="80"
+                   placeholder="Name on the order" value="{{ form_data.get('customer_name','') }}">
+
+            <label for="amount">Order subtotal (₹)</label>
+            <input id="amount" name="amount" type="number" min="0.01" step="0.01" required
+                   placeholder="e.g. 450.00" value="{{ form_data.get('amount','') }}">
+
+            <div class="card-heading second"><span class="number">02</span><div><h2>Choose a discount</h2><p>Pick the offer you want to use.</p></div></div>
+            <div class="choice-list">
+            {% for key, label in discount_options.items() %}
+                <label class="choice">
+                    <input type="radio" name="discount_type" value="{{ key }}"
+                        {% if form_data.get('discount_type','none') == key %}checked{% endif %}>
+                    <span>{{ label }}</span>
+                </label>
+            {% endfor %}
+            </div>
+
+            <div class="card-heading second"><span class="number">03</span><div><h2>Payment method</h2><p>Choose one of the available demo methods.</p></div></div>
+            <div class="payment-options">
+                <label class="payment-choice"><input type="radio" name="payment_method" value="card" required {% if form_data.get('payment_method') == 'card' %}checked{% endif %}><span class="pay-icon">💳</span><span><strong>Card</strong><small>Credit or debit card</small></span></label>
+                <label class="payment-choice"><input type="radio" name="payment_method" value="upi" required {% if form_data.get('payment_method') == 'upi' %}checked{% endif %}><span class="pay-icon">📱</span><span><strong>UPI</strong><small>Mobile payment</small></span></label>
+                <label class="payment-choice"><input type="radio" name="payment_method" value="wallet" required {% if form_data.get('payment_method') == 'wallet' %}checked{% endif %}><span class="pay-icon">👛</span><span><strong>Wallet</strong><small>Digital wallet</small></span></label>
+            </div>
+
+            <button class="pay-button" type="submit">Confirm and pay</button>
+            <p class="demo-note">This is a coursework simulation. No real payment is made and no card or UPI credentials are collected.</p>
+        </form>
+
+        <aside class="side-card">
+            <div class="side-art">🧾</div>
+            <p class="eyebrow">A QUICK REMINDER</p>
+            <h2>Clear and simple checkout.</h2>
+            <p>The checkout service works behind the scenes to apply your selected discount and send the final amount to the payment method you chose.</p>
+            <div class="secure-note"><span>✓</span> Demo transaction · No real money transferred</div>
+        </aside>
+    </section>
+
+    {% if receipt %}
+    <section class="receipt-card">
+        <div class="receipt-top"><div class="success-icon">✓</div><div><p class="eyebrow">PAYMENT CONFIRMATION</p><h2>{{ "Payment successful" if receipt.success else "Payment declined" }}</h2></div></div>
+        <div class="receipt-lines">
+            <div><span>Customer</span><strong>{{ receipt.customer }}</strong></div>
+            <div><span>Payment method</span><strong>{{ receipt.method }}</strong></div>
+            <div><span>Subtotal</span><strong>₹{{ "%.2f"|format(receipt.subtotal) }}</strong></div>
+            <div><span>Discount</span><strong class="saving">− ₹{{ "%.2f"|format(receipt.discount) }}</strong></div>
+            <div class="final-line"><span>Amount paid</span><strong>₹{{ "%.2f"|format(receipt.amount) }}</strong></div>
+            <div><span>Reference ID</span><strong>{{ receipt.reference }}</strong></div>
+            <div><span>Date</span><strong>{{ receipt.timestamp }}</strong></div>
+        </div>
+        <p class="receipt-message">{{ receipt.message }}</p>
+        <form method="post" action="{{ url_for('clear_receipt') }}"><button class="outline-button" type="submit">Clear receipt</button></form>
+    </section>
+    {% endif %}
+    <footer>GoodBite · Checkout made simple.</footer>
+</main>
+</body>
+</html>
